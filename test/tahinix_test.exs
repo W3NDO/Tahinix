@@ -3,6 +3,14 @@ defmodule TahinixTest do
 
   use ExUnit.Case
 
+  setup do
+    passing_tests = [(quote do: Tahinix.test("equivalence", do: Tahinix.assert(2 == 2))), (quote do: Tahinix.test("non-equivalence", do: Tahinix.assert(2 != 3)))]
+
+    failing_tests =  [(quote do: Tahinix.test("equivalence", do: Tahinix.assert(2 != 2))), (quote do: Tahinix.test("non-equivalence", do: Tahinix.assert(2 == 3)))]
+
+    failing_tests = [(quote do: Tahinix.skip_test("equivalence", do: Tahinix.assert(2 == 2))), (quote do: Tahinix.skip_test("non-equivalence", do: Tahinix.assert(2 != 3)))]
+  end
+
   describe "Testing the assert function" do
     test "assert returns non-zero value when tests fail equivalence" do
       assert Tahinix.assert(2 == 4) == {:error, "Assertion failed: 2 == 4"}
@@ -74,6 +82,45 @@ defmodule TahinixTest do
     test "A test block of a failing non-equivalence test" do
       assert Tahinix.test("non-equivalence of 2 and 3", do: Tahinix.assert(2 != 3)) ==
                {:ok, ["non-equivalence of 2 and 3"]}
+    end
+  end
+
+  describe "skip_test function allows for skipping of the test" do
+    test "The skip_test/2 function returns {:ok, :skipped_test, [test_name]}" do
+      assert Tahinix.skip_test("equivalence of 2 and 3", do: Tahinix.assert(2 == 3)) ==
+               {:ok, :skipped_test, ["equivalence of 2 and 3"]}
+    end
+  end
+
+  describe "Tests for the describe block" do
+    test "describe block where all tests pass", %{passing_tests: passing_tests} do
+
+      describe_block = Tahinix.describe( "passing_tests", passing_tests)
+
+      assert describe_block == {:ok, "passing_tests", [
+        %{pass: ["equivalence", "non-equivalene"]},
+        %{fail: []},
+        %{skip: []}
+      ]
+    }
+    end
+
+    test "describe block where all tests fail" do
+    end
+
+    test "describe block where all tests are skipped" do
+    end
+
+    test "describe block where some tests pass & some fail" do
+    end
+
+    test "describe block where some tests pass and skip" do
+    end
+
+    test "describe block where some tests fail and skip" do
+    end
+
+    test "describe block where some tests pass, fail and skip" do
     end
   end
 end

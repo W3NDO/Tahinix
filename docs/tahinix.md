@@ -256,12 +256,84 @@ end
 
 And it will return whether or not our test has passed. 
 
+
+## Skip test blocks
+
+Sometimes, we want to skip tests as developers. Exlir allows you to add a tag before a test in order to skp it, for instance
+
+```
+@tag :skip
+test "Add numbers" do
+    ...
+end
+```
+
+Similarly, in RSpec, we have the `xit` function that allows us to skip tests for instance
+
+```
+xit "add two numbers" do
+    ...
+end
+```
+
+For our simple test runner, we add in a function `skip_test/2` that allows us to skip test. All it does is return a tuple `{:ok, :skipped_test, [test_name]}`.
+
+Our test case to ensure functionality looks like this:
+```
+describe "skip_test function allows for skipping of the test" do
+    assert Tahinix.skip_test("equivalence of 2 and 3", do: Tahinix.assert(2 == 3)) == {:ok, :skipped_test, ["equivalence of 2 and 3"]}
+end
+```
+
+and to make our tests green, we do this
+
+```
+defmacro skip_test(test_name, do: _block) do
+    quote do
+      test_name = unquote(test_name)
+      {:ok, :skipped_test, ["#{test_name}"]}
+    end
+end
+```
+
+## Describe blocks
+
+In testing libraries, describe blocks allow for grouping tests that belong to the same function. For instance, if we want to test functions associated with a user signing in we would have a test suite that looks like this
+
+```
+describe "User signs in" do
+
+    test "returns {:ok, user}"  do
+        ...
+    end
+
+    test "returns {:error, :invalid_credentials} for wrong password" do
+        ...
+    end
+
+    test "returns {:error, :invalid_credentials} for unknown email" do
+        ...
+    end
+end
+```
+
+When developing a `describe block like this, we would want to be able to track all the tests in the block and enumerate those that pass, those that are skipped and those that failed. 
+
+Now this requires a state tracked by the describe function. To do this, we will create a list of 3 maps
+
+```
+[
+    %{pass: [list_of_tests_names]}, 
+    %{fail: [list_of_tests_names]}, 
+    %{skip: [list_of_tests_names]}
+]
+```
+
+
 # Conclusion
 With all this, we already have a sample test runner with the basics working. Further improvements might be adding in describe blocks, accumulating the test that pass and fail and showing them to the users, and adding in other important functions like `refute`
 
 And now we also have a better understanding of how metaprogramming in Elixir can help us write utilities like test runners. But remember, the first rule of writing Macros, `Don't write Macros`
-
-
 
 
 References: 
