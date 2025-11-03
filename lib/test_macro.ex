@@ -1,0 +1,2 @@
+defmodule TestMacro do
+end
