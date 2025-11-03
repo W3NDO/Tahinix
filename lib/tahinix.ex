@@ -30,4 +30,16 @@ defmodule Tahinix do
       end
     end
   end
+
+  defmacro test(test_name, do: block) do
+    quote do
+      test_name = unquote(test_name)
+      block = unquote(block)
+
+      case block do
+        :ok -> {:ok, [test_name]}
+        {:error, reason} -> {:error, [test_name, reason]}
+      end
+    end
+  end
 end

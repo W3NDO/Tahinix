@@ -167,8 +167,93 @@ Finally, can we test assertions on the output of functions? For instance,
     :ok
 ```
 
+## Test blocks
+
+The next thing we would need to figure out is how to implement a test block in our runner. We should be able to inspect the AST that ExUnit returns when we pass it into quote. 
+
+```
+iex> test_ast = quote do
+        test "sum test" do
+            assert 2 + 2 == 4
+        end
+    end
+
+{:test, [],
+ [
+   "sum test",
+   [
+     do: {:assert, [],
+      [
+        {:==, [context: Elixir, imports: [{2, Kernel}]],
+         [
+           {:+, [context: Elixir, imports: [{1, Kernel}, {2, Kernel}]], [2, 4]},
+           6
+         ]}
+      ]}
+   ]
+ ]}
+```
+Remember the breakdown we did earlier on the parts of the return value of `quote`? 
+
+Here we see that the function name is `test` with no metadata(2nd arg), and its arguments are a do block. All we need to do for our test runner is build a function that returns a similar AST.
+
+We start by writing our tests as usual:
+
+```
+describe "testing test blocks." do
+    test "A test block of a passing equivalence test" do
+      assert Tahinix.test("equivalence of 2 and 2", do: Tahinix.assert(2 == 2)) ==
+               {:ok, ["equivalence of 2 and 2"]}
+    end
+
+    test "A test block of a passing non-equivalence test" do
+      assert Tahinix.test("non-equivalence of 2 and 2", do: Tahinix.assert(2 != 2)) ==
+               {:error, ["non-equivalence of 2 and 2", "Assertion failed: 2 != 2"]}
+    end
+
+    test "A test block of a failing equivalence test" do
+      assert Tahinix.test("equivalence of 2 and 3", do: Tahinix.assert(2 == 3)) ==
+               {:error, ["equivalence of 2 and 3", "Assertion failed: 2 == 3"]}
+    end
+
+    test "A test block of a failing non-equivalence test" do
+      assert Tahinix.test("non-equivalence of 2 and 3", do: Tahinix.assert(2 != 3)) ==
+               {:ok, ["non-equivalence of 2 and 3"]}
+    end
+end
+```
+Now we need an implementation to make the tests green.
+
+```
+defmacro test(test_name, do: block) do
+    quote do
+      test_name = unquote(test_name)
+      block = unquote(block)
+
+      case block do
+        :ok -> {:ok, [test_name]}
+        {:error, reason} -> {:error, [test_name, reason]}
+      end
+    end
+  end
+```
+
+This function will execute whatever is passed in the do block (in our case we will assume it is an assertion). If the block runs without error, we return an `{:ok, [test_name]}` tuple. Otherwise, we return a `{:error, [test_name, reason]}` tuple. 
 
 
+And now we can write blocks of code like
+```
+Tahinix.test "Adding 2 numbers" do
+    Tahinix.assert(MyFun.sum(2,1) == 3)
+end
+```
+
+And it will return whether or not our test has passed. 
+
+# Conclusion
+With all this, we already have a sample test runner with the basics working. Further improvements might be adding in describe blocks, accumulating the test that pass and fail and showing them to the users, and adding in other important functions like `refute`
+
+And now we also have a better understanding of how metaprogramming in Elixir can help us write utilities like test runners. But remember, the first rule of writing Macros, `Don't write Macros`
 
 
 

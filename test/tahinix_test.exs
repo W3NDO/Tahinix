@@ -56,5 +56,24 @@ defmodule TahinixTest do
   end
 
   describe "testing test blocks." do
+    test "A test block of a passing equivalence test" do
+      assert Tahinix.test("equivalence of 2 and 2", do: Tahinix.assert(2 == 2)) ==
+               {:ok, ["equivalence of 2 and 2"]}
+    end
+
+    test "A test block of a passing non-equivalence test" do
+      assert Tahinix.test("non-equivalence of 2 and 2", do: Tahinix.assert(2 != 2)) ==
+               {:error, ["non-equivalence of 2 and 2", "Assertion failed: 2 != 2"]}
+    end
+
+    test "A test block of a failing equivalence test" do
+      assert Tahinix.test("equivalence of 2 and 3", do: Tahinix.assert(2 == 3)) ==
+               {:error, ["equivalence of 2 and 3", "Assertion failed: 2 == 3"]}
+    end
+
+    test "A test block of a failing non-equivalence test" do
+      assert Tahinix.test("non-equivalence of 2 and 3", do: Tahinix.assert(2 != 3)) ==
+               {:ok, ["non-equivalence of 2 and 3"]}
+    end
   end
 end
