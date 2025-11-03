@@ -1,4 +1,9 @@
-# The beginning
+I have not interacted much with metaprogramming in Elixir, but I thought it was time to check it out. 
+
+For this article, we will be building a test runner to explore the topic. 
+
+So let's begin. 
+
 ## Quote
 First, we need to understand how ExUnit tests are internally represented on the AST. 
 
@@ -75,10 +80,10 @@ We define a function `assert/1` which takes one argument that must be an express
 
 ```
 iex> Tahinix.assert(2 == 2)
-.
+:ok
 ```
 
-In our tests, we check the cases where we use `:!=` and `:==`
+In our tests, we check the assert cases where we use `:!=` and `:==`
 
 ```
 defmodule TahinixTest do
@@ -147,7 +152,8 @@ Similarly for the assert `:!=` we pattern match in the function head to get
 
 When we run our tests, we find that they are all green now. 
 
-![Test pass](./images/tests%20pass%201.png)
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/vwnu65cz1d8a8bp7qqbx.png)
 
 The question now remains, how complex an expression could we include in the left hand side? Let us right some tests and see what we can add in. 
 
@@ -169,7 +175,7 @@ Finally, can we test assertions on the output of functions? For instance,
 
 ## Test blocks
 
-The next thing we would need to figure out is how to implement a test block in our runner. We should be able to inspect the AST that ExUnit returns when we pass it into quote. 
+The next thing we would need to figure out is how to implement a test block in our runner. Let us inspect the AST that ExUnit test case returns when we pass it into quote. 
 
 ```
 iex> test_ast = quote do
